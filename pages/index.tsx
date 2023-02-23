@@ -6,26 +6,42 @@ import Head from 'next/head';
 import { useEffect, useState } from 'react';
 import { useSigner } from 'wagmi';
 import styles from '../styles/Home.module.css';
+import AddOwner from './components/AddOwner';
+import Owners from './components/owners';
+
+enum Screen {
+  OWNERS,
+  ADD_OWNER
+}
+
+const ScreenKeys = (Object.keys(Screen) as Array<keyof typeof Screen>);
+
 
 const Home: NextPage = () => {
 
-  const { data: signer } = useSigner();  
+  const { data: signer } = useSigner();
+  const [screen, setScreen] = useState<Screen>(Screen.OWNERS);
   const [owners, setOwners] = useState<string[]>([]);
-  const [msg, setMsg] = useState<MultisigWallet>(new MultisigWallet({
-    rpcUrl: "https://staging-v3.skalenodes.com/v1/staging-aware-chief-gianfar",
-    signer: signer as Wallet
-  }));
+  const [msg, setMsg] = useState<MultisigWallet>();
 
   const addresses = async() => {
-    const res = await msg.getOwners();
-    setOwners(res);
+    const res = await msg?.getOwners();
+    if (res) setOwners(res);
+
   }
 
+  const update = async() => {
+    await addresses();
+  }
+  
   useEffect(() => {
-    const update = async() => {
-      await addresses();
-    }
+    setMsg(new MultisigWallet({
+      rpcUrl: "https://staging-v3.skalenodes.com/v1/staging-aware-chief-gianfar",
+      signer: signer as Wallet
+    }));
+  }, [signer]);
 
+  useEffect(() => {
     update();
   }, []) 
 
@@ -42,20 +58,26 @@ const Home: NextPage = () => {
       </Head>
 
       <main className={styles.main}>
-        <h2>Owners</h2>
-        {owners && owners.map((owner: string, index: number) => {
-          return (
-            <div key={index}>
-              <p>{owner}</p>
-              <button onClick={async(e) => {
-                e.preventDefault();
-                await msg.removeOwner({
-                  address: owner
-                });
-              }}>Remove Owner</button>
-            </div>
-          );
-        })}
+        <div className={styles.screenOptions}>
+          <button onClick={() => setScreen(Screen.ADD_OWNER)}>Add Owner</button>
+          <button onClick={() => setScreen(Screen.OWNERS)}>List Owners</button>
+        </div>
+        <h2 className={styles.screenName}>{(Screen[screen]).split("_").map((v: string) => {
+          return v.substring(0, 1) + v.substring(1).toLowerCase()
+        }).join(" ")}</h2>
+        <div className={styles.component}>
+          {signer && msg ? (
+            <>
+              {screen === Screen.OWNERS && <Owners {...{update, owners, msg}} />}
+              {screen === 1 && <AddOwner {...{update, owners, msg}} />}
+            </>
+          ) : (
+            <>
+              <ConnectButton /> 
+            </>
+          )}
+          
+        </div>
       </main>
     </div>
   );

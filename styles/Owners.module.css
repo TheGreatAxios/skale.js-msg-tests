@@ -1,0 +1,25 @@
+.owners {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.owner {
+    height: 20%;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.owner p {
+    width: 50%;
+}
+
+.owner button {
+    width: 25%;
+}
